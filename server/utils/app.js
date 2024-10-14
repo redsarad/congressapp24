@@ -26,7 +26,7 @@ async function run(model, input) {
     return result;
 }
 
-// API route for story generation
+// API route for response generation
 app.post('/api/study-aid', async (req, res) => {
     console.log(req.body);
     console.log(req.body.question);
@@ -48,7 +48,7 @@ app.post('/api/study-aid', async (req, res) => {
         res.json(result); // Send the generated story back to the client
     } catch (error) {
         console.error("Error during API call:", error);
-        res.status(500).json({ error: "An error occurred while generating the story." });
+        res.status(500).json({ error: "An error occurred while generating the response." });
     }
 });
 
