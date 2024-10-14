@@ -5,7 +5,7 @@ const { ORIGIN } = require('../constants'); // Ensure this constant is defined
 
 // initialize app
 const app = express();
-const { ORIGIN, API_KEY, ACCOUNT_ID } = process.env;
+const { API_KEY, ACCOUNT_ID } = process.env;
 
 // middlewares
 app.use(cors({ origin: ORIGIN }));
@@ -17,7 +17,7 @@ async function run(model, input) {
     const response = await fetch(
         `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/ai/run/${model}`,
         {
-            headers: { Authorization: 'Bearer ${API_KEY}' },
+            headers: { Authorization: `Bearer ${API_KEY}` },
             method: "POST",
             body: JSON.stringify(input),
         }
@@ -28,16 +28,18 @@ async function run(model, input) {
 
 // API route for story generation
 app.post('/api/study-aid', async (req, res) => {
+    console.log(req.body);
+    console.log(req.body.question);
     try {
         const input = {
             messages: [
                 {
                     role: "system",
-                    content: "You are a friendly assistant that helps students get better at grades and improve themselves. Your name is LockedIn AI. ",
+                    content: "You are a friendly assistant that helps students get better at grades and improve themselves.",
                 },
                 {
                     role: "user",
-                    content: req.body.content || "How do I study for an English test?", // Default prompt
+                    content: req.body.question || "How do I study for an English test?", // Default prompt
                 },
             ],
         };
