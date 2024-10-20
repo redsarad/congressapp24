@@ -1,20 +1,17 @@
-const express = require('express'); // Backend App (server)
-const cors = require('cors'); // HTTP headers (enable requests)
-const fetch = require('node-fetch'); // Required for making API calls
-const { ORIGIN } = require('../constants'); // Ensure this constant is defined
-const { PythonShell } = require('python-shell');
-const path = require('path');
-
+const express = require('express');
+const cors = require('cors'); 
+const fetch = require('node-fetch');
+const { ORIGIN } = require('../constants'); 
+const { MongoClient } = require('mongodb');
 // initialize app
 const app = express();
-const { API_KEY, ACCOUNT_ID } = process.env;
+const { API_KEY, ACCOUNT_ID,MONGO_URI } = process.env;
 
 // middlewares
 app.use(cors({ origin: ORIGIN }));
-app.use(express.json({ extended: true })); // body parser
-app.use(express.urlencoded({ extended: false })); // url parser
+app.use(express.json({ extended: true }));
+app.use(express.urlencoded({ extended: false })); 
 
-// Function to call the Llama-3 model
 async function run(model, input) {
     const response = await fetch(
         `https://api.cloudflare.com/client/v4/accounts/${ACCOUNT_ID}/ai/run/${model}`,
@@ -27,6 +24,13 @@ async function run(model, input) {
     const result = await response.json();
     return result;
 }
+
+MongoClient.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
+    .then((client) => {
+        db = client.db('congress24');
+        console.log("Connected to MongoDB");
+    })
+    .catch((error) => console.error("Error connecting to MongoDB:", error));
 
 // API route for response generation
 app.post('/api/study-aid', async (req, res) => {
@@ -57,7 +61,7 @@ app.post('/api/study-aid', async (req, res) => {
 app.post('/trendanalyze', async (req, res) => {
     try {
         console.log(req.body);
-        const { dates, grades } = req.body;
+        const { dates, grades, subject } = req.body; // Make sure 'subject' is included
 
         // Prepare the data for the Flask API
         const input = { dates, grades };
@@ -73,29 +77,42 @@ app.post('/trendanalyze', async (req, res) => {
         const intercept = result.intercept;
         const slope = result.slope;
         const score = result.score;
-        if(slope>0&&slope<1){
+
+        // Update the user's grades in MongoDB (assuming userId is defined)
+        await db.collection('grades').updateOne(
+            { /* Add criteria here when you're ready to use userId */ },
+            {
+                $set: {
+                    [`subjects.${subject}.dates`]: dates,
+                    [`subjects.${subject}.grades`]: grades
+                }
+            },
+            { upsert: true }  // Insert the user if it doesn’t exist
+        );
+
+        // Send response
+        res.json({ message: 'Grade data updated successfully', analysis: result });
+
+        // Log trend analysis
+        if (slope > 0 && slope < 1) {
             console.log("Steady increase");
         }
-        if(slope>1){
-            console.log("Huge increase!");
+        if (slope > 1) {
+            console.log("Huge increase");
         }
-        if(slope>-1&&slope<0){
+        if (slope > -1 && slope < 0) {
             console.log("Steady decrease");
         }
-        if(slope<-1){
+        if (slope < -1) {
             console.log("Huge decrease");
         }
-        if (flaskResponse.ok) {
-            res.json(result); // Send the trend data back to the client
-        } else {
-            console.error("Error from Flask API:", result);
-            res.status(500).json({ error: result.error || "Failed to analyze trends." });
-        }
+
     } catch (error) {
         console.error("Error during trend analysis:", error);
         res.status(500).json({ error: "An error occurred while analyzing trends." });
     }
 });
+
 
 
 // Error handling
