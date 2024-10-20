@@ -2,6 +2,8 @@ const express = require('express'); // Backend App (server)
 const cors = require('cors'); // HTTP headers (enable requests)
 const fetch = require('node-fetch'); // Required for making API calls
 const { ORIGIN } = require('../constants'); // Ensure this constant is defined
+const { PythonShell } = require('python-shell');
+const path = require('path');
 
 // initialize app
 const app = express();
@@ -52,11 +54,54 @@ app.post('/api/study-aid', async (req, res) => {
     }
 });
 
+app.post('/trendanalyze', async (req, res) => {
+    try {
+        console.log(req.body);
+        const { dates, grades } = req.body;
+
+        // Prepare the data for the Flask API
+        const input = { dates, grades };
+
+        // Call the Flask server
+        const flaskResponse = await fetch('http://127.0.0.1:8080/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(input)
+        });
+
+        const result = await flaskResponse.json();
+        const intercept = result.intercept;
+        const slope = result.slope;
+        const score = result.score;
+        if(slope>0&&slope<1){
+            console.log("Steady increase");
+        }
+        if(slope>1){
+            console.log("Huge increase!");
+        }
+        if(slope>-1&&slope<0){
+            console.log("Steady decrease");
+        }
+        if(slope<-1){
+            console.log("Huge decrease");
+        }
+        if (flaskResponse.ok) {
+            res.json(result); // Send the trend data back to the client
+        } else {
+            console.error("Error from Flask API:", result);
+            res.status(500).json({ error: result.error || "Failed to analyze trends." });
+        }
+    } catch (error) {
+        console.error("Error during trend analysis:", error);
+        res.status(500).json({ error: "An error occurred while analyzing trends." });
+    }
+});
+
+
 // Error handling
 app.use((err, req, res, next) => {
     console.error(err);
     res.status(500).send();
     next();
 });
-
 module.exports = app;
