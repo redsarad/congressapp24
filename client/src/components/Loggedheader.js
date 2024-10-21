@@ -12,7 +12,7 @@ import OnlineIndicator from './OnlineIndicator'
 import AuthModal from './AuthModal'
 import {useAuth} from '../contexts/AuthContext'
 
-export default function Header() {
+export default function Loggedheader() {
   const {isLoggedIn, account, logout} = useAuth()
 
   const [anchorEl, setAnchorEl] = useState(null)
@@ -51,6 +51,7 @@ export default function Header() {
           <Avatar src={account?.username || ''} alt={account?.username || ''} />
         </OnlineIndicator>
       </IconButton>
+
       <Popover
         anchorEl={anchorEl}
         open={popover}

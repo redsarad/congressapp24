@@ -22,9 +22,19 @@
     "delete-modules": "rm -r ./node_modules && cd ./server && rm -r ./node_modules && cd ../client && rm -r ./node_modules"
   },
   "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "concurrently": "^6.3.0"
   },
   "dependencies": {
-    "numpy": "^0.0.1"
+    "chart.js": "^4.4.5",
+    "markdown": "^0.5.0",
+    "markdown-to-jsx": "^7.5.0",
+    "numpy": "^0.0.1",
+    "path": "^0.12.7",
+    "react-chartjs-2": "^5.2.0",
+    "react-markdown": "^9.0.1",
+    "recharts": "^2.13.0",
+    "stream": "^0.0.3",
+    "vfile": "^6.0.3"
   }
 }

@@ -1,24 +1,30 @@
-import {useAuth} from './contexts/AuthContext'
-import Header from './components/Header'
-
+import { useAuth } from './contexts/AuthContext';
+import Header from './components/Header';
+import LoggedHeader from './components/Loggedheader';
+import Chat from './components/Chat';
+import Trend from './components/Trend';
 export default function App() {
-  const {isLoggedIn} = useAuth()
+  const { isLoggedIn } = useAuth();
 
   return (
     <div className='App'>
-      <Header />
-
+      {isLoggedIn ?<Header />:<LoggedHeader/>}
       {isLoggedIn ? <LoggedInText /> : <LoggedOutText />}
     </div>
-  )
+  );
 }
 
 const LoggedInText = () => {
-  const {account} = useAuth()
-
-  return <p>Hey, {account.username}! I'm happy to let you know: you are authenticated!</p>
-}
+  const { account } = useAuth();
+  return <div>
+    <Chat/>
+    <Trend/>
+    </div>
+};
 
 const LoggedOutText = () => (
-  <p>Don't forget to start your backend server, then authenticate yourself.</p>
-)
+  <div>
+    <p>Don't forget to start your backend server, then authenticate yourself.</p>
+    <h1>LockedIn</h1>
+  </div>
+  );

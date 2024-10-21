@@ -77,6 +77,7 @@ app.post('/trendanalyze', async (req, res) => {
         const intercept = result.intercept;
         const slope = result.slope;
         const score = result.score;
+        const analyze=result.analyze;
 
         // Update the user's grades in MongoDB (assuming userId is defined)
         await db.collection('grades').updateOne(
@@ -94,18 +95,7 @@ app.post('/trendanalyze', async (req, res) => {
         res.json({ message: 'Grade data updated successfully', analysis: result });
 
         // Log trend analysis
-        if (slope > 0 && slope < 1) {
-            console.log("Steady increase");
-        }
-        if (slope > 1) {
-            console.log("Huge increase");
-        }
-        if (slope > -1 && slope < 0) {
-            console.log("Steady decrease");
-        }
-        if (slope < -1) {
-            console.log("Huge decrease");
-        }
+
 
     } catch (error) {
         console.error("Error during trend analysis:", error);
