@@ -1,18 +1,14 @@
 import matplotlib
-matplotlib.use('Agg')  # Use non-GUI backend
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import os
 from datetime import datetime
 from flask import Flask, request, jsonify
+from sklearn.linear_model import LinearRegression
 
-# Initialize Flask app
+
 app = Flask(__name__)
-
-# Ensure the static directory exists
-static_dir = 'static'
-if not os.path.exists(static_dir):
-    os.makedirs(static_dir)
 
 @app.route('/analyze', methods=['POST'])
 def analyze():
@@ -22,8 +18,8 @@ def analyze():
         # Assume the following keys are present in the data
         dates = data['dates']  # list of dates
         grades = data['grades']  # list of grades
-        subject = data.get('subject', 'Subject')  # Default subject if not provided
-
+        subject = data.get('subject', '')
+        print("Subject: ",subject)
         # Convert date strings to datetime objects
         date_objects = [datetime.strptime(date, "%Y-%m-%d") for date in dates]
 
@@ -32,31 +28,29 @@ def analyze():
         X = np.array([(date - reference_date).days for date in date_objects]).reshape(-1, 1)
         y = np.array(grades)
 
-        # Perform linear regression
         model = LinearRegression()
         model.fit(X, y)
 
-        # Extract model parameters
         slope = model.coef_[0]
         intercept = model.intercept_
         score = model.score(X, y)
 
         # Determine the analysis message based on the slope
         if slope > 1:
-            analysis_message = "Huge overall increase!"
+            analyze = "Huge overall increase!"
         elif 0 < slope <= 1:
-            analysis_message = "Steady overall increase"
+            analyze = "Steady overall increase"
         elif -1 <= slope < 0:
-            analysis_message = "Steady overall decrease"
+            analyze = "Steady overall decrease"
         elif slope < -1:
-            analysis_message = "Huge overall decrease"
+            analyze = "Huge overall decrease"
         else:
-            analysis_message = "No change so far"
+            analyze = "No change so far"
 
         # Create the plot
         plt.figure(figsize=(10, 5))
-        plt.plot(dates, grades, marker='o', linestyle='-', color='b')
-        plt.title(f'Grade Trend for {subject}')
+        plt.plot(dates, grades, marker='o')
+        plt.title(f'Grade Trend Analysis')
         plt.xlabel('Date')
         plt.ylabel('Grades')
         plt.xticks(rotation=45)
@@ -64,17 +58,19 @@ def analyze():
 
         # Generate a unique filename for the plot
         plot_filename = f'plot_{datetime.now().strftime("%Y%m%d_%H%M%S")}.png'
-        plot_path = os.path.join(app.static_folder, plot_filename)  # Correct path to save
+        plot_path = os.path.join('static', plot_filename)  # Ensure 'static' directory exists
+
+        # Save the plot
         plt.savefig(plot_path)
-        plt.close()
+        plt.close()  # Close the figure to free up memory
 
         # Prepare the output data
         output_data = {
             "slope": slope,
             "intercept": intercept,
             "score": score,
-            "analysis": analysis_message,  # Changed key to 'analysis'
-            "plot": f'/static/{plot_filename}'  # URL path to the plot for frontend use
+            "analyze": analyze,
+            "plot": f'/{plot_filename}'  # Include the path to the plot for frontend use
         }
 
         return jsonify(output_data)

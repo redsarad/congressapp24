@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const GradeTrendAnalyzer = () => {
   const [dates, setDates] = useState(''); // State to store the dates
@@ -6,6 +6,30 @@ const GradeTrendAnalyzer = () => {
   const [subject, setSubject] = useState(''); // State to store the subject
   const [analysis, setAnalysis] = useState(null); // Store the analysis from API
   const [plotImage, setPlotImage] = useState(''); // State to store the plot image URL
+
+  // Load data from local storage when the component mounts
+  useEffect(() => {
+    const savedDates = localStorage.getItem('dates');
+    const savedGrades = localStorage.getItem('grades');
+    const savedSubject = localStorage.getItem('subject');
+
+    if (savedDates) setDates(savedDates);
+    if (savedGrades) setGrades(savedGrades);
+    if (savedSubject) setSubject(savedSubject);
+  }, []);
+
+  // Save data to local storage whenever they change
+  useEffect(() => {
+    localStorage.setItem('dates', dates);
+  }, [dates]);
+
+  useEffect(() => {
+    localStorage.setItem('grades', grades);
+  }, [grades]);
+
+  useEffect(() => {
+    localStorage.setItem('subject', subject);
+  }, [subject]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

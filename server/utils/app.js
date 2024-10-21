@@ -83,7 +83,7 @@ app.post('/trendanalyze', async (req, res) => {
             const result = await flaskResponse.json(); // Get JSON first
             
             // Construct the absolute URL for the plot
-            const plotUrl = `http://127.0.0.1:5000${result.plot}`; // Combine base URL and relative path
+            const plotUrl = `http://127.0.0.1:5000/static/${result.plot}`; // Combine base URL and relative path
             
             // Fetch the image buffer from the absolute URL
             const imageBuffer = await fetch(plotUrl).then(res => {
