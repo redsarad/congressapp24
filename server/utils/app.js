@@ -1,11 +1,16 @@
 const express = require('express');
 const cors = require('cors'); 
 const fetch = require('node-fetch');
+const path = require('path');
 const { ORIGIN } = require('../constants'); 
 const { MongoClient } = require('mongodb');
+const fs = require('fs');
+
 // initialize app
 const app = express();
 const { API_KEY, ACCOUNT_ID,MONGO_URI } = process.env;
+
+
 
 // middlewares
 app.use(cors({ origin: ORIGIN }));
@@ -61,23 +66,46 @@ app.post('/api/study-aid', async (req, res) => {
 app.post('/trendanalyze', async (req, res) => {
     try {
         console.log(req.body);
-        const { dates, grades, subject } = req.body; // Make sure 'subject' is included
+        const { dates, grades, subject } = req.body; // Ensure 'subject' is included
 
         // Prepare the data for the Flask API
         const input = { dates, grades };
 
-        // Call the Flask server
-        const flaskResponse = await fetch('http://127.0.0.1:8080/analyze', {
+        // Call the Flask server and receive the plot image
+        const flaskResponse = await fetch('http://127.0.0.1:5000/analyze', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(input)
         });
 
-        const result = await flaskResponse.json();
-        const intercept = result.intercept;
-        const slope = result.slope;
-        const score = result.score;
-        const analyze=result.analyze;
+        // Check if the response is OK
+        if (flaskResponse.ok) {
+            const result = await flaskResponse.json(); // Get JSON first
+            
+            // Construct the absolute URL for the plot
+            const plotUrl = `http://127.0.0.1:5000${result.plot}`; // Combine base URL and relative path
+            
+            // Fetch the image buffer from the absolute URL
+            const imageBuffer = await fetch(plotUrl).then(res => {
+                if (!res.ok) {
+                    throw new Error('Failed to fetch the image.');
+                }
+                return res.buffer(); 
+            });
+
+            const imagePath = path.join(__dirname, '../../analyze/static', 'grade_trend_plot.png');
+
+            // Save the image to the server
+            fs.writeFileSync(imagePath, imageBuffer); // Save the image buffer
+            res.json({
+                message: 'Grade data updated successfully',
+                analysis: result, // This is your analysis data returned from Flask
+                plot: plotUrl // Include the plot URL in the response
+            });
+        } else {
+            const errorData = await flaskResponse.json();
+            res.status(500).json({ error: errorData.error });
+        }
 
         // Update the user's grades in MongoDB (assuming userId is defined)
         await db.collection('grades').updateOne(
@@ -91,18 +119,11 @@ app.post('/trendanalyze', async (req, res) => {
             { upsert: true }  // Insert the user if it doesn’t exist
         );
 
-        // Send response
-        res.json({ message: 'Grade data updated successfully', analysis: result });
-
-        // Log trend analysis
-
-
     } catch (error) {
         console.error("Error during trend analysis:", error);
         res.status(500).json({ error: "An error occurred while analyzing trends." });
     }
 });
-
 
 
 // Error handling

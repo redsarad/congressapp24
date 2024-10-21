@@ -5,6 +5,7 @@ const GradeTrendAnalyzer = () => {
   const [grades, setGrades] = useState(''); // State to store the grades
   const [subject, setSubject] = useState(''); // State to store the subject
   const [analysis, setAnalysis] = useState(null); // Store the analysis from API
+  const [plotImage, setPlotImage] = useState(''); // State to store the plot image URL
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,16 +29,21 @@ const GradeTrendAnalyzer = () => {
 
       const data = await response.json();
 
-      // Check if the response contains the analysis
+      // Check if the response contains the analysis and the plot image
       if (data && data.analysis) {
-        setAnalysis(data.analysis); // Now directly using the nested "analysis" object
+        setAnalysis(data.analysis); // Use the nested "analysis" object
+        setPlotImage(data.plot); // Set the plot image URL from the response
       } else {
         console.error('Unexpected API response:', data);
+        // Optionally reset states if there's an error
+        setAnalysis(null);
+        setPlotImage('');
       }
     } catch (error) {
       console.error('Error making API request:', error);
-      // Optionally reset analysis state if there's an error
+      // Optionally reset states if there's an error
       setAnalysis(null);
+      setPlotImage('');
     }
   };
 
@@ -84,6 +90,14 @@ const GradeTrendAnalyzer = () => {
         <div className="analysis-box mb-4">
           <h3>Analysis</h3>
           <p><strong>Result:</strong> {analysis.analyze}</p>
+        </div>
+      )}
+
+      {/* Display the plot image if available */}
+      {plotImage && (
+        <div className="plot-image mb-4">
+          <h3>Grade Trend Plot</h3>
+          <img src={plotImage} alt="Grade Trend Plot" style={{ maxWidth: '100%', height: 'auto' }} />
         </div>
       )}
     </div>

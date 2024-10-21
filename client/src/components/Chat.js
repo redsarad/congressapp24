@@ -1,68 +1,102 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import Markdown from 'markdown-to-jsx'; // Import markdown-to-jsx
+import Markdown from 'markdown-to-jsx';
 
 const Chat = () => {
   const { account } = useAuth();
-  const [userInput, setUserInput] = useState(''); // Manage textbox input
-  const [chatHistory, setChatHistory] = useState([]); // Store chat history
-  const [loading, setLoading] = useState(false); // Loading state for the spinner
+  const [userInput, setUserInput] = useState('');
+  const [chatHistory, setChatHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+  
+  // Reference to the chat container
+  const chatContainerRef = useRef(null);
+
+  // Load chat history from localStorage when component mounts
+  useEffect(() => {
+    const savedChatHistory = localStorage.getItem('chatHistory');
+    if (savedChatHistory) {
+      setChatHistory(JSON.parse(savedChatHistory));
+    }
+  }, []);
+
+  // Save chat history to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('chatHistory', JSON.stringify(chatHistory));
+    scrollToBottom(); // Scroll to bottom when chat history updates
+  }, [chatHistory]);
+
+  // Scroll to the bottom of the chat
+  const scrollToBottom = () => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true); // Set loading to true when the request starts
+    setLoading(true);
 
     try {
-      // Example API call
       const response = await fetch('http://localhost:3001/api/study-aid', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ question: userInput }), // Send the user input
+        body: JSON.stringify({ question: userInput }),
       });
 
       const data = await response.json();
-      
-      // Update chat history with new question and response
+
       setChatHistory((prevHistory) => [
         ...prevHistory,
         { question: userInput, response: data.result.response },
       ]);
-      
-      // Clear input field after submission
+
       setUserInput('');
     } catch (error) {
       console.error('Error making API request:', error);
     } finally {
-      setLoading(false); // Set loading to false when the request completes
+      setLoading(false);
     }
+  };
+
+  // Clear chat history
+  const clearChatHistory = () => {
+    setChatHistory([]);
+    localStorage.removeItem('chatHistory');
   };
 
   return (
     <div className="container mt-4">
-      <h1 className="mb-4">LockedIn AI</h1>
+      <div className="header-container text-center">
+        <h1 className="mb-4">LockedIn AI</h1>
+      </div>
 
-      {/* Render chat history */}
       {chatHistory.length > 0 && (
-        <div className="response-box border-0 rounded p-3 bg-transparent">
+        <div className="response-box border-0 rounded p-3 bg-transparent" style={{ maxHeight: '800px', overflowY: 'auto' }}>
           {chatHistory.map((chat, index) => (
             <div key={index} style={{ marginBottom: '1rem' }}>
               <strong>{account.username}: </strong> {chat.question}
-              <br/>
-              <strong> LockedIn AI:</strong>
-              <span className="markdown-response" style={{
-                padding: '10px',
-                fontFamily: 'Roboto, sans-serif',
-                fontSize: '15px',
-              }}>
-                <Markdown>{chat.response}</Markdown> {/* Render Markdown here */}
+              <br />
+              <strong>LockedIn AI:</strong>
+              <span
+                className="markdown-response"
+                style={{
+                  padding: '10px',
+                  fontFamily: 'Roboto, sans-serif',
+                  fontSize: '15px',
+                }}
+              >
+                <Markdown>{chat.response}</Markdown>
               </span>
             </div>
           ))}
+          {/* Dummy div to scroll into view */}
+          <div ref={chatContainerRef} />
         </div>
       )}
 
+      {/* Form to submit chat input */}
       <form onSubmit={handleSubmit} className="form-inline mb-4">
         <div className="form-group mr-2">
           <input
@@ -76,10 +110,18 @@ const Chat = () => {
         <button type="submit" className="btn btn-primary">Send</button>
       </form>
 
-      {/* Loading indicator */}
-      {loading && <div className="spinner-border text-primary" role="status">
-        <span className="sr-only">Loading...</span>
-      </div>}
+      {/* Clear Chat Button */}
+      {chatHistory.length > 0 && (
+        <button onClick={clearChatHistory} className="btn btn-danger mb-4">
+          Clear Chat
+        </button>
+      )}
+
+      {loading && (
+        <div className="spinner-border text-primary" role="status">
+          <span className="sr-only">Loading...</span>
+        </div>
+      )}
     </div>
   );
 };
