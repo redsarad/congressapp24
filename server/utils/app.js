@@ -109,7 +109,7 @@ app.post('/trendanalyze', async (req, res) => {
             messages: [
                 {
                     role: "system",
-                    content: "You are a friendly assistant that given a group of dates, the overall grade for that class on that given date(not the test grade, overall class grade), and a subject, will give a detailed study plan and will NOT ask follow up questions to the user.",
+                    content: "Given a group of dates and the overall grade for that class(not the grade recieved) on that date as well as the subject, construct a detailed study plan with short term and long term goals, aiming to bring that student's grade to an A or maintain an A. Assume today is the most recent date listed",
                 },
                 { role: "user", content: questionForStudyAid },
             ],

@@ -2,14 +2,14 @@ import Markdown from 'markdown-to-jsx';
 import React, { useState, useEffect } from 'react';
 
 const GradeTrendAnalyzer = () => {
-  const [dates, setDates] = useState('');
-  const [grades, setGrades] = useState('');
   const [subject, setSubject] = useState('');
   const [newSubject, setNewSubject] = useState('');
   const [analysis, setAnalysis] = useState(null);
   const [studyAid, setStudyAid] = useState(null); // Separate state for study aid
   const [plotImage, setPlotImage] = useState('');
+  const [dateGradePairs, setDateGradePairs] = useState([]); // State for date-grade pairs
   const [selectedDate, setSelectedDate] = useState('');
+  const [selectedGrade, setSelectedGrade] = useState('');
   const [subjects, setSubjects] = useState([]);
   const [subjectData, setSubjectData] = useState({});
   const [loading, setLoading] = useState(false);
@@ -23,31 +23,33 @@ const GradeTrendAnalyzer = () => {
     setSubjectData(savedSubjectData);
 
     if (subject) {
-      setDates(savedSubjectData[subject]?.dates || '');
-      setGrades(savedSubjectData[subject]?.grades || '');
+      setDateGradePairs(savedSubjectData[subject]?.dateGradePairs || []); // Load date-grade pairs
     }
   }, [subject]); // Run when subject changes
 
-  // Save data to local storage whenever dates, grades, or subject changes
+  // Save data to local storage whenever date-grade pairs or subject changes
   useEffect(() => {
     if (subject) {
       const updatedSubjectData = {
         ...subjectData,
-        [subject]: { dates, grades },
+        [subject]: { 
+          dateGradePairs // Include date-grade pairs
+        },
       };
       setSubjectData(updatedSubjectData);
       localStorage.setItem('subjectData', JSON.stringify(updatedSubjectData));
       localStorage.setItem('subjects', JSON.stringify(Object.keys(updatedSubjectData)));
     }
-  }, [dates, grades, subject]);
+  }, [dateGradePairs, subject]); // Add dateGradePairs to dependencies
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
+    // Prepare payload from date-grade pairs
     const payload = {
-      dates: dates.split(',').map(date => date.trim()),
-      grades: grades.split(',').map(Number),
+      dates: dateGradePairs.map(pair => pair.date),
+      grades: dateGradePairs.map(pair => pair.grade),
       subject: subject,
     };
 
@@ -85,13 +87,24 @@ const GradeTrendAnalyzer = () => {
     }
   };
 
-  const addDate = () => {
-    if (selectedDate) {
-      setDates((prevDates) => 
-        prevDates ? `${prevDates}, ${selectedDate}` : selectedDate
-      );
+  const addDateGradePair = () => {
+    if (selectedDate && selectedGrade) {
+      setDateGradePairs((prevPairs) => {
+        const updatedPairs = [
+          ...prevPairs,
+          { date: selectedDate, grade: Number(selectedGrade) }, // Add the new pair
+        ];
+
+        // Sort the updated pairs before returning
+        return updatedPairs.sort((a, b) => new Date(a.date) - new Date(b.date));
+      });
       setSelectedDate('');
+      setSelectedGrade('');
     }
+  };
+
+  const deleteDateGradePair = (index) => {
+    setDateGradePairs((prevPairs) => prevPairs.filter((_, i) => i !== index));
   };
 
   const handleSubjectChange = (e) => {
@@ -100,11 +113,9 @@ const GradeTrendAnalyzer = () => {
 
     if (selectedSubject) {
       const savedData = subjectData[selectedSubject] || {};
-      setDates(savedData.dates || '');
-      setGrades(savedData.grades || '');
+      setDateGradePairs(savedData.dateGradePairs || []); // Load date-grade pairs
     } else {
-      setDates('');
-      setGrades('');
+      setDateGradePairs([]); // Clear date-grade pairs
     }
   };
 
@@ -114,13 +125,15 @@ const GradeTrendAnalyzer = () => {
       setSubjects(updatedSubjects);
       setSubjectData((prevData) => ({
         ...prevData,
-        [newSubject]: { dates: '', grades: '' }
+        [newSubject]: { 
+          dateGradePairs: [] // Initialize with empty dateGradePairs 
+        }
       }));
 
       localStorage.setItem('subjects', JSON.stringify(updatedSubjects));
       localStorage.setItem('subjectData', JSON.stringify({
         ...subjectData,
-        [newSubject]: { dates: '', grades: '' }
+        [newSubject]: { dateGradePairs: [] }
       }));
       
       setSubject(newSubject);
@@ -140,8 +153,7 @@ const GradeTrendAnalyzer = () => {
 
       localStorage.setItem('subjects', JSON.stringify(updatedSubjects));
       localStorage.setItem('subjectData', JSON.stringify(updatedSubjectData));
-      setDates('');
-      setGrades('');
+      setDateGradePairs([]); // Clear date-grade pairs
     }
   };
 
@@ -192,44 +204,54 @@ const GradeTrendAnalyzer = () => {
             </button>
           )}
         </div>
-        
+
         <div className="form-group">
-          <label>Dates:</label>
-          <div className="input-group">
+          <label>Date and Grade:</label>
+          <div className="input-group mb-2">
             <input
               type="date"
               className="form-control"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
             />
+            <input
+              type="number"
+              className="form-control ml-2"
+              value={selectedGrade}
+              onChange={(e) => setSelectedGrade(e.target.value)}
+              placeholder="Grade"
+            />
             <button
               type="button"
               className="btn btn-primary ml-2"
-              onClick={addDate}
+              onClick={addDateGradePair}
             >
-              Add Date
+              Add Date & Grade
             </button>
           </div>
-          <input
-            type="text"
-            className="form-control mt-2"
-            value={dates}
-            onChange={(e) => setDates(e.target.value)}
-            placeholder="Dates (comma separated)"
-          />
         </div>
-        
+
         <div className="form-group">
-          <label>Grades:</label>
-          <input
-            type="text"
-            className="form-control"
-            value={grades}
-            onChange={(e) => setGrades(e.target.value)}
-            placeholder="Grades (comma separated)"
-          />
+          <h5>Current Date-Grade Pairs</h5>
+          {dateGradePairs.length === 0 ? (
+            <p>No date-grade pairs added yet.</p>
+          ) : (
+            <ul className="list-group mb-2">
+              {dateGradePairs.map((pair, index) => (
+                <li key={index} className="list-group-item d-flex justify-content-between align-items-center">
+                  <span>{`${pair.date}: ${pair.grade}`}</span>
+                  <button 
+                    className="btn btn-danger btn-sm" 
+                    onClick={() => deleteDateGradePair(index)}
+                  >
+                    Delete
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
-        
+
         <button type="submit" className="btn btn-primary">Analyze</button>
       </form>
 
