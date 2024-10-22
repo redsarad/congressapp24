@@ -163,7 +163,7 @@ const GradeTrendAnalyzer = () => {
 
       <form onSubmit={handleSubmit} className="mb-4">
         <div className="form-group">
-          <label>Subject:</label>
+          <h5>Subject:</h5>
           <select 
             className="form-control mb-2" 
             value={subject} 
@@ -206,7 +206,7 @@ const GradeTrendAnalyzer = () => {
         </div>
 
         <div className="form-group">
-          <label>Date and Grade:</label>
+          <h5>Date and Grade:</h5>
           <div className="input-group mb-2">
             <input
               type="date"
