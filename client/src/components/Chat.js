@@ -108,6 +108,11 @@ const Chat = () => {
           />
         </div>
         <button type="submit" className="btn btn-primary">Send</button>
+        {loading && (
+        <div className="spinner-border text-primary ml-2" role="status">
+          <span className="sr-only">Loading...</span>
+        </div>
+      )}
       </form>
 
       {/* Clear Chat Button */}
@@ -115,12 +120,6 @@ const Chat = () => {
         <button onClick={clearChatHistory} className="btn btn-danger mb-4">
           Clear Chat
         </button>
-      )}
-
-      {loading && (
-        <div className="spinner-border text-primary" role="status">
-          <span className="sr-only">Loading...</span>
-        </div>
       )}
     </div>
   );

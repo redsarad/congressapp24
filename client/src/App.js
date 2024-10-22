@@ -6,7 +6,7 @@ import Trend from './components/Trend';
 
 export default function App() {
   const { isLoggedIn, account } = useAuth(); // Ensure we're getting account info if needed
-  const [currentPage, setCurrentPage] = useState(''); // Track which page is active
+  const [currentPage, setCurrentPage] = useState('chat'); // Track which page is active
 
   // Function to navigate between pages
   const navigate = (page) => {
@@ -26,7 +26,6 @@ export default function App() {
             <div>
               {currentPage === 'chat' && <ChatPage account={account} />}
               {currentPage === 'trend' && <TrendPage />}
-              {currentPage === '' && <p>Please select a page to view</p>}
             </div>
           </>
         ) : (

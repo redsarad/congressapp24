@@ -7,7 +7,6 @@ from datetime import datetime
 from flask import Flask, request, jsonify
 from sklearn.linear_model import LinearRegression
 
-
 app = Flask(__name__)
 
 @app.route('/analyze', methods=['POST'])
@@ -19,15 +18,16 @@ def analyze():
         dates = data['dates']  # list of dates
         grades = data['grades']  # list of grades
         subject = data.get('subject', '')
-        print("Subject: ",subject)
+        print("Subject: ", subject)
+
         # Convert date strings to datetime objects
         date_objects = [datetime.strptime(date, "%Y-%m-%d") for date in dates]
 
-        # Calculate the difference in days from the first date
-        reference_date = date_objects[0]
-        X = np.array([(date - reference_date).days for date in date_objects]).reshape(-1, 1)
+        # Convert dates to ordinal values for regression
+        X = np.array([date.toordinal() for date in date_objects]).reshape(-1, 1)
         y = np.array(grades)
 
+        # Fit the linear regression model
         model = LinearRegression()
         model.fit(X, y)
 
@@ -36,25 +36,26 @@ def analyze():
         score = model.score(X, y)
 
         # Determine the analysis message based on the slope
-        if slope > 1:
+        if slope > 0.25:
             analyze = "Huge overall increase!"
-        elif 0 < slope <= 1:
+        elif 0 < slope <= 0.25:
             analyze = "Steady overall increase"
-        elif -1 <= slope < 0:
+        elif -0.25 <= slope < 0:
             analyze = "Steady overall decrease"
-        elif slope < -1:
+        elif slope < -0.25:
             analyze = "Huge overall decrease"
         else:
             analyze = "No change so far"
 
         # Create the plot
         plt.figure(figsize=(10, 5))
-        plt.plot(dates, grades, marker='o')
+        plt.plot(date_objects, grades, marker='o')  # Use datetime objects for plotting
         plt.title(f'Grade Trend Analysis')
         plt.xlabel('Date')
         plt.ylabel('Grades')
         plt.xticks(rotation=45)
         plt.tight_layout()
+        # Removed legend as per your request
 
         # Generate a unique filename for the plot
         plot_filename = f'plot_{datetime.now().strftime("%Y%m%d_%H%M%S")}.png'
