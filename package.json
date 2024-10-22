@@ -22,6 +22,25 @@
     "delete-modules": "rm -r ./node_modules && cd ./server && rm -r ./node_modules && cd ../client && rm -r ./node_modules"
   },
   "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "concurrently": "^6.3.0"
+  },
+  "dependencies": {
+    "@cloudflare/workers-types": "^4.20241018.0",
+    "chart.js": "^4.4.5",
+    "date-fns": "^4.1.0",
+    "fs": "^0.0.1-security",
+    "markdown": "^0.5.0",
+    "markdown-to-jsx": "^7.5.0",
+    "node-fetch": "^3.3.2",
+    "numpy": "^0.0.1",
+    "path": "^0.12.7",
+    "react-chartjs-2": "^5.2.0",
+    "react-datepicker": "^7.5.0",
+    "react-markdown": "^9.0.1",
+    "react-router-dom": "^6.27.0",
+    "recharts": "^2.13.0",
+    "stream": "^0.0.3",
+    "vfile": "^6.0.3"
   }
 }

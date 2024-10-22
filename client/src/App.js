@@ -1,24 +1,60 @@
-import {useAuth} from './contexts/AuthContext'
-import Header from './components/Header'
+import { useState } from 'react';
+import { useAuth } from './contexts/AuthContext';
+import Header from './components/Header'; // Ensure this component is defined
+import Chat from './components/Chat';
+import Trend from './components/Trend';
 
 export default function App() {
-  const {isLoggedIn} = useAuth()
+  const { isLoggedIn, account } = useAuth(); // Ensure we're getting account info if needed
+  const [currentPage, setCurrentPage] = useState('chat'); // Track which page is active
+
+  // Function to navigate between pages
+  const navigate = (page) => {
+    setCurrentPage(page);
+  };
 
   return (
-    <div className='App'>
-      <Header />
-
-      {isLoggedIn ? <LoggedInText /> : <LoggedOutText />}
+    <div className="App">
+      {/* Pass the navigate function as onNavigate prop to Header */}
+      <Header onNavigate={navigate} />
+      
+      {/* Render main content based on authentication status */}
+      <div>
+        {isLoggedIn ? (
+          <>
+            {/* Render the current page */}
+            <div>
+              {currentPage === 'chat' && <ChatPage account={account} />}
+              {currentPage === 'trend' && <TrendPage />}
+            </div>
+          </>
+        ) : (
+          <LoggedOutText />
+        )}
+      </div>
     </div>
-  )
+  );
 }
 
-const LoggedInText = () => {
-  const {account} = useAuth()
+const ChatPage = ({ account }) => {
+  return (
+    <div>
+      <Chat />
+    </div>
+  );
+};
 
-  return <p>Hey, {account.username}! I'm happy to let you know: you are authenticated!</p>
-}
+const TrendPage = () => {
+  return (
+    <div>
+      <Trend />
+    </div>
+  );
+};
 
 const LoggedOutText = () => (
-  <p>Don't forget to start your backend server, then authenticate yourself.</p>
-)
+  <div>
+    <p>Don't forget to start your backend server, then authenticate yourself.</p>
+    <h1>LockedIn</h1>
+  </div>
+);
