@@ -14,6 +14,7 @@ import {
 import OnlineIndicator from './OnlineIndicator';
 import AuthModal from './AuthModal';
 import { useAuth } from '../contexts/AuthContext';
+import logo from '../logo_processed.png';
 
 export default function Header({ onNavigate }) {
   const { isLoggedIn, account, logout } = useAuth();
@@ -50,7 +51,7 @@ export default function Header({ onNavigate }) {
       <Toolbar style={{ justifyContent: 'space-between', width: '100%' }}>
         {/* Left Side - Title and Buttons */}
         <Box display="flex" alignItems="center">
-          <h1 style={{ margin: 0 }}>LockedIn</h1>
+          <img src={logo} style={{height:"80px"}}/>
           {isLoggedIn && (
             <Box ml={2}>
               <Button color="inherit" onClick={() => onNavigate('chat')}>
